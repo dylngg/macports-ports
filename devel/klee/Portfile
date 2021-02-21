@@ -1,0 +1,63 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           github 1.0
+PortGroup           cmake 1.1
+PortGroup           compiler_blacklist_versions 1.0
+
+name                klee
+github.setup        klee klee 2.2 v
+revision            0
+categories          devel math
+platforms           darwin
+license             UIUC
+maintainers         {@dylngg gardnermedia.com:dylan} openmaintainer
+
+description         KLEE Symbolic Execution Engine
+long_description    KLEE is a dynamic symbolic execution engine built on top of the LLVM compiler infrastructure
+
+homepage            https://klee.github.io/
+
+checksums           rmd160  44e22bc8e62f4aa72d25556c4c3bad1d316ac7bf \
+                    sha256  2466d3a0443d104d94cf76efa1d40ebf367c2ff00ad065be01703694fb6b857b \
+                    size    1073280
+
+# See https://klee.github.io/build-llvm9/ for build instructions
+depends_lib         port:python35 \
+                    port:py35-tabulate \
+                    port:sqlite3 \
+                    port:gperftools \
+                    port:zlib
+
+set llvm_version    9.0
+set llvm_config     LLVM_CONFIG=llvm-config-mp-${llvm_version}
+
+depends_lib-append  port:llvm-${llvm_version}
+
+compiler.blacklist-append *gcc* clang
+compiler.fallback       macports-clang-${llvm_version}
+compiler.whitelist      macports-clang-${llvm_version}
+compiler.cxx_standard   2014
+
+cmake.build_type    Release
+
+# See https://github.com/klee/klee/blob/master/README-CMake.md for supported options
+configure.args-append   -DLLVM_CONFIG_BINARY=${prefix}/bin/llvm-config-mp-${llvm_version} \
+                        -DENABLE_TCMALLOC=ON \
+                        -DENABLE_DOCS=ON \
+                        -DENABLE_ZLIB=ON \
+                        -DENABLE_UNIT_TESTS=OFF \
+                        -DENABLE_SYSTEM_TESTS=OFF \
+                        -DKLEE_RUNTIME_BUILD_TYPE=Release
+
+# The STP port on MacOS doesn't really build on every machine right now, so default to just z3 instead
+default_variants    +z3
+
+variant stp description {Enable support for the STP constraint solver} {
+    depends_lib-append      port:stp
+    configure.args-append   -DENABLE_SOLVER_STP=ON
+}
+variant z3 description {Enable support for the Z3 constraint solver} {
+    depends_lib-append      port:z3
+    configure.args-append   -DENABLE_SOLVER_Z3=ON
+}
