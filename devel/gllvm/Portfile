@@ -1,0 +1,41 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+PortGroup           golang 1.0
+
+name                gllvm
+go.setup            github.com/SRI-CSL/gllvm 1.3.0 v
+revision            0
+
+categories          devel
+license             BSD
+
+maintainers         {@dylngg gardnermedia.com:dylan} openmaintainer
+
+description         Whole Program LLVM: wllvm ported to Go
+long_description    gllvm provides tools for building whole-program (or whole-library) \
+                    LLVM bitcode files from an unmodified C or C++ source package
+
+homepage            https://github.com/SRI-CSL/gllvm
+
+checksums           rmd160  9d1618a144c6d0275b4364d90d43dcdaf3e4406c \
+                    sha256  0d1e7f180371edb354bb931f5cfe2636399e291459c01be60b5aa2028dbd5a60 \
+                    size    608613
+
+installs_libs       no
+
+# Multiple targets to build, hence this mess
+set _build_path     ${worksrcpath}/build
+
+build.pre_args      -trimpath -o ${_build_path}
+build.args          ./cmd/...
+
+pre-build {
+    file mkdir ${_build_path}
+}
+
+destroot {
+    xinstall -m 755 {*}[glob ${_build_path}/*] ${destroot}${prefix}/bin/
+}
+
+# No vendors
